@@ -1,7 +1,17 @@
 import {Component} from 'react'
 
+import Cookies from 'js-cookie'
+
+import {Redirect} from 'react-router-dom'
+
 class Login extends Component{
-    state={username:'' , password:''}
+    constructor(){
+        super()
+        const token = Cookies.get('auth_token')
+        this.state = {token ,username:'' , password:'' }
+    }
+
+    
 
     formFunction = (event)=>{
         event.preventDefault()
@@ -14,8 +24,39 @@ class Login extends Component{
         this.setState({password:event.target.value})
     }
 
-    render(){
+    checkCredentilas = async ()=>{
         const {username , password} = this.state
+        const credentials = {username , password}
+        const url = 'https://apis.ccbp.in/login'
+        const options = {
+            method:'POST',
+           
+            body:JSON.stringify(credentials)
+
+        }
+        try{
+        const response = await fetch(url , options)
+        const parsedData = await response.json()
+        // console.log(parsedData)
+
+        if(response.ok === true){
+            const jwt_token = JSON.stringify(parsedData.jwt_token)
+            
+           Cookies.set('auth_token' , jwt_token , {expires:1})
+        }
+        }
+        catch(e){
+            console.log(e)
+        }
+
+    }
+
+
+    render(){
+        const {username , password , token} = this.state 
+        if(token !== undefined){
+            return <Redirect to='/' />
+        }
         return <div>
             <form onClick={this.formFunction}>
                 <h1>LOGO</h1>
@@ -29,7 +70,7 @@ class Login extends Component{
             <label htmlFor='password-input'>PASSWORD</label> 
             <input type='password'  placeholder='enter password' onChange={this.changePassword} value={password} /> 
             </div>
-            <button type='button'>Submit</button>
+            <button type='button' onClick={this.checkCredentilas}>Submit</button>
             </form>
         </div>
     }
